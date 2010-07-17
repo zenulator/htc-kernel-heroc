@@ -6,7 +6,7 @@ menu "Wireless LAN"
 	depends on !S390
 
 config WL1271
-	bool "TI WLAN 1271 Drivers for HTC Espresso"
+	tristate "TI WLAN 1271 Drivers for HTC Espresso"
 	default y
 
 config WLAN_PRE80211
