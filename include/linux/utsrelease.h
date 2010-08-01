@@ -1,1 +1,1 @@
-#define UTS_RELEASE "2.6.29-b115858f"
+#define UTS_RELEASE "2.6.29.6-cyanogenmod"
