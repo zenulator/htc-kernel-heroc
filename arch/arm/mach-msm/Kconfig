@@ -199,6 +199,13 @@ config MACH_LATTE
 	help
 	  Support for Latte (PDA phone).
 
+config MACH_HEROC
+	depends on ARCH_MSM7X00A
+	default n
+	bool "Hero"
+	help
+	  Support for HeroC (PDA phone).
+
 config MACH_LIBERTY
 	depends on ARCH_MSM7227
 	default n

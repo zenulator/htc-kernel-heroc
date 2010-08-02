@@ -67,3 +67,8 @@ obj-$(CONFIG_PERFLOCK) += perflock.o
 obj-$(CONFIG_MICROP_COMMON) += atmega_microp_common.o
 obj-$(CONFIG_TOUCHSCREEN_TSSC_MANAGER) += htc_tp_cal.o
 
+obj-$(CONFIG_MACH_HEROC) += board-heroc.o board-heroc-panel.o board-heroc-keypad.o
+obj-$(CONFIG_MACH_HEROC) += board-heroc-rfkill.o
+obj-$(CONFIG_MACH_HEROC) += board-heroc-mmc.o board-heroc-wifi.o htc_wifi_nvs.o
+obj-$(CONFIG_ARCH_MSM7X00A) += msm_vibrator.o devices_htc.o
+
