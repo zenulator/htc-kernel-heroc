@@ -59,6 +59,7 @@ include/linux/autoconf.h
 include/linux/bounds.h
 include/linux/compile.h
 include/asm-arm/asm-offsets.h
+include/linux/utsrelease.h
 
 # stgit generated dirs
 patches-*
