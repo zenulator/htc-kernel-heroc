@@ -98,6 +98,7 @@ struct clkctl_acpu_speed {
 /* Index in acpu_freq_tbl[] for steppings. */
 	short		down;
 	short		up;
+        short           pll2_lval;
 };
 
 /*
@@ -182,7 +183,7 @@ static struct cpufreq_frequency_table msm7227_freq_table[] = {
 
 static struct cpufreq_frequency_table msm72xx_freq_table[] = {
 #if defined(CONFIG_TURBO_MODE)
-//	{ 0, 19200 },
+	{ 0, 19200 },
 	{ 0, 122880 },
 	{ 1, 160000 },
 	{ 2, 245760 },
@@ -286,14 +287,12 @@ unsigned long acpuclk_power_collapse(int from_idle)
 {
 	int ret = acpuclk_get_rate();
 
-	if (ret > drv_state.power_collapse_khz) {
 		if (from_idle)
 			acpuclk_set_rate(drv_state.power_collapse_khz * 1000,
 					SETRATE_PC_IDLE);
 		else
 			acpuclk_set_rate(drv_state.power_collapse_khz * 1000,
 					SETRATE_PC);
-	}
 	return ret * 1000;
 }
 
@@ -305,7 +304,6 @@ unsigned long acpuclk_get_wfi_rate(void)
 unsigned long acpuclk_wait_for_irq(void)
 {
 	int ret = acpuclk_get_rate();
-	if (ret > drv_state.wait_for_irq_khz)
 		acpuclk_set_rate(drv_state.wait_for_irq_khz * 1000,
 				SETRATE_SWFI);
 	return ret * 1000;
@@ -336,10 +334,21 @@ static int acpuclk_set_vdd_level(int vdd)
 
 /* Set proper dividers for the given clock speed. */
 static void acpuclk_set_div(const struct clkctl_acpu_speed *hunt_s) {
-	uint32_t reg_clkctl, reg_clksel, clk_div;
+         uint32_t reg_clkctl, reg_clksel, clk_div, a11_div;
+
 
 	/* AHB_CLK_DIV */
 	clk_div = (readl(A11S_CLK_SEL_ADDR) >> 1) & 0x03;
+
+	a11_div=hunt_s->a11clk_src_div;
+
+       if (hunt_s->a11clk_khz > 518400 && hunt_s->pll2_lval > 0) {
+
+               a11_div = 0;
+                writel(hunt_s->a11clk_khz/19200, MSM_CLK_CTL_BASE+0x33c);
+               udelay(50);
+      }
+
 	/*
 	 * If the new clock divider is higher than the previous, then
 	 * program the divider before switching the clock
@@ -362,7 +371,7 @@ static void acpuclk_set_div(const struct clkctl_acpu_speed *hunt_s) {
 		/* Program clock divider */
 		reg_clkctl = readl(A11S_CLK_CNTL_ADDR);
 		reg_clkctl &= ~0xf;
-		reg_clkctl |= hunt_s->a11clk_src_div;
+		reg_clkctl |= a11_div;
 		writel(reg_clkctl, A11S_CLK_CNTL_ADDR);
 
 		/* Program clock source selection */
@@ -381,7 +390,7 @@ static void acpuclk_set_div(const struct clkctl_acpu_speed *hunt_s) {
 		/* Program clock divider */
 		reg_clkctl = readl(A11S_CLK_CNTL_ADDR);
 		reg_clkctl &= ~(0xf << 8);
-		reg_clkctl |= (hunt_s->a11clk_src_div << 8);
+		reg_clkctl |= (a11_div << 8);
 		writel(reg_clkctl, A11S_CLK_CNTL_ADDR);
 
 		/* Program clock source selection */
@@ -466,7 +475,7 @@ int acpuclk_set_rate(unsigned long rate, enum setrate_reason reason)
 
 	/* Set wait states for CPU inbetween frequency changes */
 	reg_clkctl = readl(A11S_CLK_CNTL_ADDR);
-	reg_clkctl |= (100 << 14); /* set WT_ST_CNT */
+	reg_clkctl |= (100 << 16); /* set WT_ST_CNT */
 	writel(reg_clkctl, A11S_CLK_CNTL_ADDR);
 
 	if (acpu_debug_mask & PERF_SWITCH_DEBUG)
